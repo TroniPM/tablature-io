@@ -111,11 +111,11 @@ function onPointerMove(e: PointerEvent) {
     return
   }
 
-  if (!store.activeInstrument) { ghostNote.value = null; return }
   if (x < GRID.LABEL_WIDTH) { ghostNote.value = null; return }
   const barIndex = getBarIndexFromX(x)
   const snapped = snapToGrid(x, y, barIndex)
-  ghostNote.value = { x: snapped.snappedX, y: snapped.snappedY, instrument: snapped.instrument, symbol: store.activeSymbol }
+  const symbol = store.activeInstrument ? store.activeSymbol : INSTRUMENT_ROWS.find(r => r.id === snapped.instrument)!.defaultSymbol
+  ghostNote.value = { x: snapped.snappedX, y: snapped.snappedY, instrument: snapped.instrument, symbol }
 }
 
 function onPointerUp(e: PointerEvent) {
@@ -150,8 +150,7 @@ function onPointerLeave() {
 }
 
 function onPointerDown(e: PointerEvent) {
-  // Only stamp mode — note pointerdown stops propagation, so this only fires on empty grid areas
-  if (!store.activeInstrument) return
+  // Stamp mode: fires on empty grid areas (note pointerdown stops propagation)
   e.preventDefault()
   const { x, y } = toSVGCoords(e)
   if (x < GRID.LABEL_WIDTH) return
@@ -165,17 +164,21 @@ function onPointerDown(e: PointerEvent) {
   )
   if (exists) { store.selectNote(exists.id); return }
 
+  // Use toolbar symbol when an instrument is explicitly selected; otherwise use the row's default
+  const symbol = store.activeInstrument
+    ? store.activeSymbol
+    : INSTRUMENT_ROWS.find(r => r.id === snapped.instrument)!.defaultSymbol
+
   store.addNote(bar.id, {
     instrument: snapped.instrument,
     tick: snapped.tick,
-    symbol: store.activeSymbol,
+    symbol,
   })
 }
 
 const cursorStyle = computed(() => {
   if (dragState.value) return 'grabbing'
-  if (store.activeInstrument) return 'crosshair'
-  return 'default'
+  return 'crosshair'
 })
 </script>
 
