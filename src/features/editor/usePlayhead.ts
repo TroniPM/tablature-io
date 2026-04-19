@@ -60,7 +60,7 @@ export function usePlayhead() {
     store.playheadX = startX
     store.isPlaying = true
     lastTimestamp = null
-    prevX = startX
+    prevX = startX - 1  // one pixel before so tick-0 notes are included
     rafId = requestAnimationFrame(tick)
   }
 
@@ -72,7 +72,7 @@ export function usePlayhead() {
     store.isPlaying = false
     store.playheadX = startX
     lastTimestamp = null
-    prevX = startX
+    prevX = startX - 1
   }
 
   function toggle() {
