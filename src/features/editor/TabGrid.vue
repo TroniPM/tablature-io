@@ -13,15 +13,6 @@ const NUM_ROWS = INSTRUMENT_ROWS.length
 const rowY = (rowIndex: number) =>
   GRID.TOP_PADDING + rowIndex * GRID.ROW_HEIGHT + GRID.ROW_HEIGHT / 2
 
-/** All subdivision tick offsets within one beat, based on active subdivision */
-const subdivisionTicks = computed(() => {
-  const ticks: number[] = []
-  const steps = store.activeSubdivision
-  for (let s = 0; s < steps; s++) {
-    ticks.push(s / steps)
-  }
-  return ticks
-})
 
 /** X pixel coordinate for a given bar index + beat + tick-within-beat */
 function tickX(barIndex: number, beat: number, tickOffset: number): number {
@@ -29,10 +20,12 @@ function tickX(barIndex: number, beat: number, tickOffset: number): number {
   return barStartX + (beat + tickOffset) * GRID.BEAT_WIDTH
 }
 
-/** X pixel for absolute tick within a bar */
+/** X pixel for absolute tick within a bar.
+ *  tick = beats from bar start (e.g. 0, 0.5, 1, 1.5 with eighth-note subdivision)
+ *  so 1 tick = 1 beat = GRID.BEAT_WIDTH pixels. */
 function absoluteTickX(barIndex: number, tick: number): number {
   const barStartX = GRID.LABEL_WIDTH + barIndex * BEATS_PER_BAR * GRID.BEAT_WIDTH
-  return barStartX + tick * BEATS_PER_BAR * GRID.BEAT_WIDTH
+  return barStartX + tick * GRID.BEAT_WIDTH
 }
 
 const svgWidth = computed(() => {
@@ -43,6 +36,21 @@ const svgWidth = computed(() => {
 const svgHeight = computed(
   () => GRID.TOP_PADDING + NUM_ROWS * GRID.ROW_HEIGHT + 20,
 )
+
+// ─── SVG element ref ─────────────────────────────────────────────────────────
+const svgRef = ref<SVGSVGElement | null>(null)
+
+/** Convert a PointerEvent to SVG-space coordinates using getBoundingClientRect.
+ *  clientX/Y and getBoundingClientRect are both in viewport space, so their
+ *  difference is always exact — regardless of page scroll, parent scroll,
+ *  CSS transforms, or devicePixelRatio. */
+function toSVGCoords(e: PointerEvent): { x: number; y: number } {
+  const rect = svgRef.value!.getBoundingClientRect()
+  return {
+    x: e.clientX - rect.left,
+    y: e.clientY - rect.top,
+  }
+}
 
 // ─── Ghost note (snapping preview) ───────────────────────────────────────────
 const ghostNote = ref<{ x: number; y: number; instrument: InstrumentId } | null>(null)
@@ -61,18 +69,9 @@ function snapToGrid(svgX: number, svgY: number, barIndex: number) {
   return {
     tick: clampedTick,
     instrument: INSTRUMENT_ROWS[clampedRow].id as InstrumentId,
-    snappedX: barStartX + clampedTick * BEATS_PER_BAR * GRID.BEAT_WIDTH,
+    snappedX: barStartX + clampedTick * GRID.BEAT_WIDTH,
     snappedY: rowY(clampedRow),
   }
-}
-
-function getSVGCoords(e: PointerEvent): { x: number; y: number } {
-  const svg = (e.currentTarget as SVGSVGElement)
-  const pt = svg.createSVGPoint()
-  pt.x = e.clientX
-  pt.y = e.clientY
-  const transformed = pt.matrixTransform(svg.getScreenCTM()!.inverse())
-  return { x: transformed.x, y: transformed.y }
 }
 
 function getBarIndexFromX(svgX: number): number {
@@ -86,7 +85,7 @@ function onPointerMove(e: PointerEvent) {
     ghostNote.value = null
     return
   }
-  const { x, y } = getSVGCoords(e)
+  const { x, y } = toSVGCoords(e)
   if (x < GRID.LABEL_WIDTH) { ghostNote.value = null; return }
   const barIndex = getBarIndexFromX(x)
   const snapped = snapToGrid(x, y, barIndex)
@@ -100,7 +99,7 @@ function onPointerLeave() {
 function onPointerDown(e: PointerEvent) {
   if (!store.activeInstrument) return
   e.preventDefault()
-  const { x, y } = getSVGCoords(e)
+  const { x, y } = toSVGCoords(e)
   if (x < GRID.LABEL_WIDTH) return
   const barIndex = getBarIndexFromX(x)
   const snapped = snapToGrid(x, y, barIndex)
@@ -127,6 +126,7 @@ function onPointerDown(e: PointerEvent) {
 <template>
   <div class="w-full overflow-x-auto">
     <svg
+      ref="svgRef"
       :width="svgWidth"
       :height="svgHeight"
       class="select-none"
