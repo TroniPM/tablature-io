@@ -4,6 +4,8 @@ import { useTabStore } from '@/stores/useTabStore'
 import TabGrid from '@/features/editor/TabGrid.vue'
 import EditorToolbar from '@/features/editor/EditorToolbar.vue'
 import { useExport } from '@/features/editor/useExport'
+import { usePlayhead } from '@/features/editor/usePlayhead'
+import { unlockAudio } from '@/features/editor/useAudioEngine'
 
 const store = useTabStore()
 
@@ -13,11 +15,15 @@ const { exportPDF, exportImage, isExportingPDF, isExportingImage, exportError } 
   () => tabGridRef.value?.svgRef ?? null,
 )
 
+// ─── Playhead ────────────────────────────────────────────────────────────────
+const { toggle: togglePlayback } = usePlayhead()
+
 // ─── Keyboard shortcuts ───────────────────────────────────────────────────────
 function handleKeyDown(e: KeyboardEvent) {
   if ((e.ctrlKey || e.metaKey) && e.key === 'z') { e.preventDefault(); store.undo() }
   if ((e.ctrlKey || e.metaKey) && e.key === 'y') { e.preventDefault(); store.redo() }
-  if (e.key === 'Escape') store.clearActiveInstrument()
+  if (e.key === ' ') { e.preventDefault(); togglePlayback() }
+  if (e.key === 'Escape') { store.clearActiveInstrument(); if (store.isPlaying) togglePlayback() }
   if ((e.key === 'Delete' || e.key === 'Backspace') && store.selectedNoteId) {
     const barWithNote = store.document.bars.find(b => b.notes.some(n => n.id === store.selectedNoteId))
     if (barWithNote) store.removeNote(barWithNote.id, store.selectedNoteId!)
@@ -30,6 +36,7 @@ function handleKeyDown(e: KeyboardEvent) {
     class="min-h-screen bg-slate-950 text-slate-100 flex flex-col"
     tabindex="-1"
     @keydown="handleKeyDown"
+    @pointerdown.once="unlockAudio()"
   >
     <!-- Header -->
     <header class="flex items-center justify-between px-6 py-3 border-b border-slate-800 shrink-0">

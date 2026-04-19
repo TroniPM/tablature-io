@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { useDraggable, useLocalStorage } from '@vueuse/core'
 import { useTabStore } from '@/stores/useTabStore'
 import { INSTRUMENT_ROWS, type InstrumentId, type NoteSymbol } from '@/types/tab'
+import { usePlayhead } from './usePlayhead'
 
 const store = useTabStore()
 
@@ -43,6 +44,9 @@ function selectInstrument(id: InstrumentId, symbol: NoteSymbol) {
 function setSubdivision(v: 1 | 2 | 4) {
   store.activeSubdivision = v
 }
+
+// ─── Playhead ────────────────────────────────────────────────────────
+const { toggle: togglePlayback } = usePlayhead()
 
 // Symbol overrides per instrument (cymbal = x, drums = o)
 const CYMBAL_IDS: InstrumentId[] = ['CR', 'RD', 'HH']
@@ -122,6 +126,27 @@ function defaultSymbol(id: InstrumentId): NoteSymbol {
 
     <!-- Divider -->
     <div class="border-t border-slate-800" />
+
+    <!-- Play / Stop -->
+    <div class="border-t border-slate-800" />
+    <div class="flex flex-col gap-1">
+      <p class="text-slate-600 text-xs uppercase tracking-widest mb-1 text-center">Transport</p>
+      <button
+        :class="[
+          'w-full px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all duration-150 border',
+          store.isPlaying
+            ? 'bg-rose-500/20 text-rose-400 border-rose-500/50 hover:bg-rose-500/30'
+            : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50 hover:bg-emerald-500/30',
+        ]"
+        :title="store.isPlaying ? 'Stop (Space)' : `Play at ${store.document.bpm} BPM`"
+        @click="togglePlayback()"
+      >
+        {{ store.isPlaying ? '⏹ Stop' : '▶ Play' }}
+      </button>
+      <p class="text-slate-700 text-xs text-center tabular-nums">
+        {{ store.document.bpm }} BPM
+      </p>
+    </div>
 
     <!-- Add bar / Undo / Redo -->
     <div class="flex flex-col gap-1">

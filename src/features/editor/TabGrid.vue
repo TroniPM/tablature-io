@@ -321,6 +321,38 @@ const cursorStyle = computed(() => {
           </feMerge>
         </filter>
       </defs>
+
+      <!-- ── Playhead ─────────────────────────────────────────────────────── -->
+      <g v-if="store.isPlaying">
+        <!-- Soft glow shadow -->
+        <line
+          :x1="store.playheadX"
+          :y1="GRID.TOP_PADDING - 4"
+          :x2="store.playheadX"
+          :y2="svgHeight - 16"
+          stroke="#34d399"
+          stroke-width="6"
+          stroke-linecap="round"
+          opacity="0.15"
+        />
+        <!-- Main line -->
+        <line
+          :x1="store.playheadX"
+          :y1="GRID.TOP_PADDING - 4"
+          :x2="store.playheadX"
+          :y2="svgHeight - 16"
+          stroke="#34d399"
+          stroke-width="1.5"
+          stroke-linecap="round"
+          opacity="0.9"
+        />
+        <!-- Top triangle indicator -->
+        <polygon
+          :points="`${store.playheadX - 5},${GRID.TOP_PADDING - 4} ${store.playheadX + 5},${GRID.TOP_PADDING - 4} ${store.playheadX},${GRID.TOP_PADDING + 6}`"
+          fill="#34d399"
+          opacity="0.9"
+        />
+      </g>
     </svg>
   </div>
 </template>

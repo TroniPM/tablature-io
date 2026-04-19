@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 import { useRefHistory } from '@vueuse/core'
 import { v4 as uuidv4 } from 'uuid'
 import type { TabDocument, TabNote, InstrumentId, NoteSymbol } from '@/types/tab'
+import { GRID } from '@/types/tab'
 
 const DEFAULT_DOCUMENT: TabDocument = {
   title: 'Untitled Tab',
@@ -34,6 +35,10 @@ export const useTabStore = defineStore(
     const activeSymbol = ref<NoteSymbol>('x')
     const selectedNoteId = ref<string | null>(null)
     const activeSubdivision = ref<1 | 2 | 4>(2)
+
+    // ─── Playhead state (non-persisted, non-history) ─────────────────────────
+    const isPlaying = ref(false)
+    const playheadX = ref<number>(GRID.LABEL_WIDTH)
 
     // ─── Computed ────────────────────────────────────────────────────────────
     const allNotes = computed(() =>
@@ -121,6 +126,8 @@ export const useTabStore = defineStore(
       activeSymbol,
       selectedNoteId,
       activeSubdivision,
+      isPlaying,
+      playheadX,
       // computed
       allNotes,
       // undo/redo
