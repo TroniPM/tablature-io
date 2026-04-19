@@ -11,7 +11,7 @@ const store = useTabStore()
 
 // ─── Export ──────────────────────────────────────────────────────────────────
 const tabGridRef = ref<InstanceType<typeof TabGrid> | null>(null)
-const { exportPDF, exportImage, isExportingPDF, isExportingImage, exportError } = useExport(
+const { exportPDF, exportImage, isExportingPDF, isExportingImage, exportError, exportJSON, importJSON } = useExport(
   () => tabGridRef.value?.svgRef ?? null,
 )
 
@@ -69,6 +69,26 @@ function handleKeyDown(e: KeyboardEvent) {
           @click="store.clearAll()"
         >
           Clear All
+        </button>
+
+        <div class="w-px h-4 bg-slate-800 mx-1" />
+
+        <!-- JSON import / export -->
+        <button
+          class="px-3 py-1.5 rounded-lg text-xs border transition-all duration-200
+                 text-sky-400 border-sky-900 hover:bg-sky-950 hover:border-sky-700"
+          title="Save as .tablature.json"
+          @click="exportJSON()"
+        >
+          ↓ Save JSON
+        </button>
+        <button
+          class="px-3 py-1.5 rounded-lg text-xs border transition-all duration-200
+                 text-sky-400 border-sky-900 hover:bg-sky-950 hover:border-sky-700"
+          title="Load a .tablature.json file"
+          @click="importJSON()"
+        >
+          ↑ Load JSON
         </button>
 
         <div class="w-px h-4 bg-slate-800 mx-1" />

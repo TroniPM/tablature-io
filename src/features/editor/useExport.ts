@@ -2,6 +2,7 @@ import { ref } from 'vue'
 import jsPDF from 'jspdf'
 import { svg2pdf } from 'svg2pdf.js'
 import { useTabStore } from '@/stores/useTabStore'
+import type { TabDocument } from '@/types/tab'
 
 export function useExport(getSvgEl: () => SVGSVGElement | null) {
   const store = useTabStore()
@@ -95,5 +96,51 @@ export function useExport(getSvgEl: () => SVGSVGElement | null) {
     }
   }
 
-  return { exportPDF, exportImage, isExportingPDF, isExportingImage, exportError }
+  // ─── JSON export ───────────────────────────────────────────────────────────
+  function exportJSON() {
+    const json = JSON.stringify(store.document, null, 2)
+    const blob = new Blob([json], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${store.document.title}.tablature.json`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
+
+  // ─── JSON import ───────────────────────────────────────────────────────────
+  function importJSON() {
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = '.json,application/json'
+    input.onchange = () => {
+      const file = input.files?.[0]
+      if (!file) return
+      const reader = new FileReader()
+      reader.onload = (ev) => {
+        try {
+          const parsed = JSON.parse(ev.target!.result as string) as TabDocument
+          // Basic structural validation
+          if (
+            typeof parsed.title !== 'string' ||
+            typeof parsed.bpm !== 'number' ||
+            !Array.isArray(parsed.bars)
+          ) {
+            exportError.value = 'Invalid file: not a tablature JSON.'
+            return
+          }
+          exportError.value = null
+          store.document = parsed
+        } catch {
+          exportError.value = 'Failed to read file. Make sure it is a valid tablature JSON.'
+        }
+      }
+      reader.readAsText(file)
+    }
+    input.click()
+  }
+
+  return { exportPDF, exportImage, isExportingPDF, isExportingImage, exportError, exportJSON, importJSON }
 }
