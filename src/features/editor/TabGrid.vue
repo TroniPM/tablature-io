@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useTabStore } from '@/stores/useTabStore'
-import { INSTRUMENT_ROWS, GRID, type InstrumentId } from '@/types/tab'
+import { INSTRUMENT_ROWS, GRID, type InstrumentId, type NoteSymbol, type TabNote } from '@/types/tab'
 import TabNoteSymbol from './TabNoteSymbol.vue'
 
 const store = useTabStore()
@@ -13,16 +13,13 @@ const NUM_ROWS = INSTRUMENT_ROWS.length
 const rowY = (rowIndex: number) =>
   GRID.TOP_PADDING + rowIndex * GRID.ROW_HEIGHT + GRID.ROW_HEIGHT / 2
 
-
-/** X pixel coordinate for a given bar index + beat + tick-within-beat */
+/** X pixel coordinate for a given bar index + beat + subdivision offset */
 function tickX(barIndex: number, beat: number, tickOffset: number): number {
   const barStartX = GRID.LABEL_WIDTH + barIndex * BEATS_PER_BAR * GRID.BEAT_WIDTH
   return barStartX + (beat + tickOffset) * GRID.BEAT_WIDTH
 }
 
-/** X pixel for absolute tick within a bar.
- *  tick = beats from bar start (e.g. 0, 0.5, 1, 1.5 with eighth-note subdivision)
- *  so 1 tick = 1 beat = GRID.BEAT_WIDTH pixels. */
+/** X pixel for a tick within a bar. tick = beats from bar start. */
 function absoluteTickX(barIndex: number, tick: number): number {
   const barStartX = GRID.LABEL_WIDTH + barIndex * BEATS_PER_BAR * GRID.BEAT_WIDTH
   return barStartX + tick * GRID.BEAT_WIDTH
@@ -37,31 +34,24 @@ const svgHeight = computed(
   () => GRID.TOP_PADDING + NUM_ROWS * GRID.ROW_HEIGHT + 20,
 )
 
-// ─── SVG element ref ─────────────────────────────────────────────────────────
+// ─── SVG element ref (exposed for export) ────────────────────────────────────
 const svgRef = ref<SVGSVGElement | null>(null)
+defineExpose({ svgRef })
 
-/** Convert a PointerEvent to SVG-space coordinates using getBoundingClientRect.
- *  clientX/Y and getBoundingClientRect are both in viewport space, so their
- *  difference is always exact — regardless of page scroll, parent scroll,
- *  CSS transforms, or devicePixelRatio. */
+/** clientX/Y and getBoundingClientRect are both in viewport space — exact regardless of scroll. */
 function toSVGCoords(e: PointerEvent): { x: number; y: number } {
   const rect = svgRef.value!.getBoundingClientRect()
-  return {
-    x: e.clientX - rect.left,
-    y: e.clientY - rect.top,
-  }
+  return { x: e.clientX - rect.left, y: e.clientY - rect.top }
 }
 
-// ─── Ghost note (snapping preview) ───────────────────────────────────────────
-const ghostNote = ref<{ x: number; y: number; instrument: InstrumentId } | null>(null)
-
+// ─── Snap helpers ─────────────────────────────────────────────────────────────
 function snapToGrid(svgX: number, svgY: number, barIndex: number) {
   const barStartX = GRID.LABEL_WIDTH + barIndex * BEATS_PER_BAR * GRID.BEAT_WIDTH
   const localX = svgX - barStartX
-  const totalBeats = BEATS_PER_BAR
   const stepSize = GRID.BEAT_WIDTH / store.activeSubdivision
   const snappedBeatFloat = Math.round(localX / stepSize) / store.activeSubdivision
-  const clampedTick = Math.max(0, Math.min(snappedBeatFloat, totalBeats - 1 / store.activeSubdivision))
+  const maxTick = BEATS_PER_BAR - 1 / store.activeSubdivision
+  const clampedTick = Math.max(0, Math.min(snappedBeatFloat, maxTick))
 
   const rowIndex = Math.round((svgY - GRID.TOP_PADDING - GRID.ROW_HEIGHT / 2) / GRID.ROW_HEIGHT)
   const clampedRow = Math.max(0, Math.min(rowIndex, NUM_ROWS - 1))
@@ -80,23 +70,87 @@ function getBarIndexFromX(svgX: number): number {
   return Math.max(0, Math.min(idx, bars - 1))
 }
 
-function onPointerMove(e: PointerEvent) {
-  if (!store.activeInstrument) {
-    ghostNote.value = null
+// ─── Ghost note (shared by stamp mode + drag mode) ───────────────────────────
+const ghostNote = ref<{
+  x: number
+  y: number
+  instrument: InstrumentId
+  symbol: NoteSymbol
+} | null>(null)
+
+// ─── Drag state ───────────────────────────────────────────────────────────────
+interface DragState {
+  noteId: string
+  barId: string
+  barIndex: number
+  symbol: NoteSymbol
+}
+const dragState = ref<DragState | null>(null)
+
+function onNotePointerDown(e: PointerEvent, note: TabNote, barId: string, barIndex: number) {
+  // In stamp mode: just select the note (propagation already stopped)
+  if (store.activeInstrument) {
+    store.selectNote(note.id)
     return
   }
+  e.preventDefault()
+  store.selectNote(note.id)
+  dragState.value = { noteId: note.id, barId, barIndex, symbol: note.symbol }
+  // Capture the pointer so pointermove/pointerup fire even outside the SVG
+  svgRef.value?.setPointerCapture(e.pointerId)
+}
+
+// ─── Pointer handlers on the SVG ─────────────────────────────────────────────
+function onPointerMove(e: PointerEvent) {
   const { x, y } = toSVGCoords(e)
+
+  if (dragState.value) {
+    const barIndex = getBarIndexFromX(Math.max(GRID.LABEL_WIDTH, x))
+    const snapped = snapToGrid(x, y, barIndex)
+    ghostNote.value = { x: snapped.snappedX, y: snapped.snappedY, instrument: snapped.instrument, symbol: dragState.value.symbol }
+    return
+  }
+
+  if (!store.activeInstrument) { ghostNote.value = null; return }
   if (x < GRID.LABEL_WIDTH) { ghostNote.value = null; return }
   const barIndex = getBarIndexFromX(x)
   const snapped = snapToGrid(x, y, barIndex)
-  ghostNote.value = { x: snapped.snappedX, y: snapped.snappedY, instrument: snapped.instrument }
+  ghostNote.value = { x: snapped.snappedX, y: snapped.snappedY, instrument: snapped.instrument, symbol: store.activeSymbol }
+}
+
+function onPointerUp(e: PointerEvent) {
+  if (!dragState.value) return
+  const { x, y } = toSVGCoords(e)
+  ghostNote.value = null
+
+  const svgX = Math.max(GRID.LABEL_WIDTH, x)
+  const newBarIndex = getBarIndexFromX(svgX)
+  const snapped = snapToGrid(svgX, y, newBarIndex)
+  const newBar = store.document.bars[newBarIndex]
+
+  if (!newBar) { dragState.value = null; return }
+
+  if (newBarIndex === dragState.value.barIndex) {
+    store.moveNote(dragState.value.barId, dragState.value.noteId, snapped.tick, snapped.instrument)
+  } else {
+    store.moveNoteAcrossBar(
+      dragState.value.barId,
+      dragState.value.noteId,
+      newBar.id,
+      snapped.tick,
+      snapped.instrument,
+    )
+  }
+
+  dragState.value = null
 }
 
 function onPointerLeave() {
-  ghostNote.value = null
+  if (!dragState.value) ghostNote.value = null
 }
 
 function onPointerDown(e: PointerEvent) {
+  // Only stamp mode — note pointerdown stops propagation, so this only fires on empty grid areas
   if (!store.activeInstrument) return
   e.preventDefault()
   const { x, y } = toSVGCoords(e)
@@ -106,14 +160,10 @@ function onPointerDown(e: PointerEvent) {
   const bar = store.document.bars[barIndex]
   if (!bar) return
 
-  // Avoid duplicate notes on same tick + instrument
   const exists = bar.notes.find(
     (n) => n.instrument === snapped.instrument && Math.abs(n.tick - snapped.tick) < 0.001,
   )
-  if (exists) {
-    store.selectNote(exists.id)
-    return
-  }
+  if (exists) { store.selectNote(exists.id); return }
 
   store.addNote(bar.id, {
     instrument: snapped.instrument,
@@ -121,6 +171,12 @@ function onPointerDown(e: PointerEvent) {
     symbol: store.activeSymbol,
   })
 }
+
+const cursorStyle = computed(() => {
+  if (dragState.value) return 'grabbing'
+  if (store.activeInstrument) return 'crosshair'
+  return 'default'
+})
 </script>
 
 <template>
@@ -130,13 +186,14 @@ function onPointerDown(e: PointerEvent) {
       :width="svgWidth"
       :height="svgHeight"
       class="select-none"
-      :style="{ cursor: store.activeInstrument ? 'crosshair' : 'default' }"
+      :style="{ cursor: cursorStyle }"
       @pointermove="onPointerMove"
+      @pointerup="onPointerUp"
       @pointerleave="onPointerLeave"
       @pointerdown="onPointerDown"
     >
       <!-- ── Instrument labels (Y-axis) ──────────────────────────────────── -->
-      <g class="instrument-labels">
+      <g>
         <text
           v-for="(row, i) in INSTRUMENT_ROWS"
           :key="row.id"
@@ -144,15 +201,16 @@ function onPointerDown(e: PointerEvent) {
           :y="rowY(i)"
           text-anchor="end"
           dominant-baseline="middle"
-          class="fill-slate-400 text-xs font-mono"
+          fill="#94a3b8"
           font-size="11"
+          font-family="'JetBrains Mono', 'Fira Code', monospace"
         >
           {{ row.label }}
         </text>
       </g>
 
       <!-- ── Row guide lines (horizontal) ───────────────────────────────── -->
-      <g class="row-lines">
+      <g>
         <line
           v-for="(row, i) in INSTRUMENT_ROWS"
           :key="`hline-${row.id}`"
@@ -165,12 +223,12 @@ function onPointerDown(e: PointerEvent) {
         />
       </g>
 
-      <!-- ── Bar + beat lines (vertical) per bar ────────────────────────── -->
+      <!-- ── Bars ────────────────────────────────────────────────────────── -->
       <g
         v-for="(bar, barIndex) in store.document.bars"
         :key="`bar-${bar.id}`"
       >
-        <!-- Bar boundary (bold left edge) -->
+        <!-- Bar boundary -->
         <line
           :x1="GRID.LABEL_WIDTH + barIndex * BEATS_PER_BAR * GRID.BEAT_WIDTH"
           :y1="GRID.TOP_PADDING"
@@ -180,9 +238,8 @@ function onPointerDown(e: PointerEvent) {
           stroke-width="1.5"
         />
 
-        <!-- Beat lines within bar -->
+        <!-- Beat and subdivision lines -->
         <g v-for="beat in BEATS_PER_BAR" :key="`beat-${barIndex}-${beat}`">
-          <!-- Beat line (strong) -->
           <line
             v-if="beat > 1"
             :x1="GRID.LABEL_WIDTH + barIndex * BEATS_PER_BAR * GRID.BEAT_WIDTH + (beat - 1) * GRID.BEAT_WIDTH"
@@ -192,8 +249,6 @@ function onPointerDown(e: PointerEvent) {
             stroke="#475569"
             stroke-width="1"
           />
-
-          <!-- Subdivision lines (dotted, subtle) -->
           <line
             v-for="sub in store.activeSubdivision - 1"
             :key="`sub-${barIndex}-${beat}-${sub}`"
@@ -207,17 +262,17 @@ function onPointerDown(e: PointerEvent) {
           />
         </g>
 
-        <!-- Bar number label -->
+        <!-- Bar number -->
         <text
           :x="GRID.LABEL_WIDTH + barIndex * BEATS_PER_BAR * GRID.BEAT_WIDTH + 4"
           :y="GRID.TOP_PADDING - 4"
           font-size="10"
-          class="fill-slate-600"
+          fill="#475569"
         >
           {{ barIndex + 1 }}
         </text>
 
-        <!-- Notes in this bar -->
+        <!-- Notes -->
         <TabNoteSymbol
           v-for="note in bar.notes"
           :key="note.id"
@@ -225,7 +280,8 @@ function onPointerDown(e: PointerEvent) {
           :x="absoluteTickX(barIndex, note.tick)"
           :y="rowY(INSTRUMENT_ROWS.findIndex((r) => r.id === note.instrument))"
           :selected="store.selectedNoteId === note.id"
-          @click="store.selectNote(note.id)"
+          :dragging="dragState?.noteId === note.id"
+          @note-pointer-down="onNotePointerDown($event, note, bar.id, barIndex)"
           @delete="store.removeNote(bar.id, note.id)"
         />
       </g>
@@ -240,20 +296,32 @@ function onPointerDown(e: PointerEvent) {
         stroke-width="1.5"
       />
 
-      <!-- ── Ghost note (snapping preview) ──────────────────────────────── -->
+      <!-- ── Ghost note (stamp preview + drag preview) ───────────────────── -->
       <TabNoteSymbol
-        v-if="ghostNote && store.activeInstrument"
+        v-if="ghostNote && (store.activeInstrument || dragState)"
         :note="{
           id: '__ghost__',
           instrument: ghostNote.instrument,
           tick: 0,
-          symbol: store.activeSymbol,
+          symbol: ghostNote.symbol,
         }"
         :x="ghostNote.x"
         :y="ghostNote.y"
         :ghost="true"
         :selected="false"
       />
+
+      <!-- SVG filter for selection glow -->
+      <defs>
+        <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+          <feGaussianBlur stdDeviation="3" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+      </defs>
     </svg>
   </div>
 </template>
+

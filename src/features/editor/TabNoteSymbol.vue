@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { TabNote, NoteSymbol } from '@/types/tab'
+import type { TabNote } from '@/types/tab'
 
 const props = defineProps<{
   note: TabNote
@@ -7,15 +7,16 @@ const props = defineProps<{
   y: number
   selected: boolean
   ghost?: boolean
+  dragging?: boolean
 }>()
 
 const emit = defineEmits<{
-  click: []
+  'note-pointer-down': [e: PointerEvent]
   delete: []
 }>()
 
 const FONT_SIZE = 16
-const opacity = props.ghost ? 0.3 : 1
+const opacity = props.ghost ? 0.3 : props.dragging ? 0.35 : 1
 
 function handleKeyDown(e: KeyboardEvent) {
   if ((e.key === 'Delete' || e.key === 'Backspace') && props.selected) {
@@ -28,9 +29,9 @@ function handleKeyDown(e: KeyboardEvent) {
   <g
     :opacity="opacity"
     class="note-symbol"
-    style="cursor: pointer"
+    :style="{ cursor: dragging ? 'grabbing' : 'grab' }"
     tabindex="0"
-    @click.stop="emit('click')"
+    @pointerdown.stop="emit('note-pointer-down', $event)"
     @keydown="handleKeyDown"
   >
     <!-- Selection ring -->
@@ -59,15 +60,4 @@ function handleKeyDown(e: KeyboardEvent) {
       {{ note.symbol }}
     </text>
   </g>
-
-  <!-- SVG filter for selected note glow (defined once, re-used) -->
-  <defs>
-    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="3" result="blur" />
-      <feMerge>
-        <feMergeNode in="blur" />
-        <feMergeNode in="SourceGraphic" />
-      </feMerge>
-    </filter>
-  </defs>
 </template>

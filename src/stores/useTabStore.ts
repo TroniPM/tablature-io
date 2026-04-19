@@ -68,6 +68,25 @@ export const useTabStore = defineStore(
       note.instrument = newInstrument
     }
 
+    /** Move a note to a different bar atomically (single undo/redo step). */
+    function moveNoteAcrossBar(
+      fromBarId: string,
+      noteId: string,
+      toBarId: string,
+      newTick: number,
+      newInstrument: InstrumentId,
+    ) {
+      const fromBar = document.value.bars.find((b) => b.id === fromBarId)
+      const toBar = document.value.bars.find((b) => b.id === toBarId)
+      if (!fromBar || !toBar) return
+      const noteIndex = fromBar.notes.findIndex((n) => n.id === noteId)
+      if (noteIndex === -1) return
+      const [note] = fromBar.notes.splice(noteIndex, 1)
+      note.tick = newTick
+      note.instrument = newInstrument
+      toBar.notes.push(note)
+    }
+
     function addBar() {
       document.value.bars.push({
         id: uuidv4(),
@@ -113,6 +132,7 @@ export const useTabStore = defineStore(
       addNote,
       removeNote,
       moveNote,
+      moveNoteAcrossBar,
       addBar,
       clearAll,
       setActiveInstrument,
