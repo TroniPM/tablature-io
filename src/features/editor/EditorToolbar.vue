@@ -48,6 +48,9 @@ function setSubdivision(v: 1 | 2 | 4) {
 // ─── Playhead ────────────────────────────────────────────────────────
 const { toggle: togglePlayback } = usePlayhead()
 
+// ─── Collapsed state (persisted) ────────────────────────────────────────────
+const isCollapsed = useLocalStorage('tablature-io-toolbar-collapsed', false)
+
 // Symbol overrides per instrument (cymbal = x, drums = o)
 const CYMBAL_IDS: InstrumentId[] = ['CR', 'RD', 'HH']
 function defaultSymbol(id: InstrumentId): NoteSymbol {
@@ -63,24 +66,46 @@ function defaultSymbol(id: InstrumentId): NoteSymbol {
            bg-slate-900/60 backdrop-blur-md border border-slate-800"
     :class="{ 'cursor-grabbing': isDragging }"
   >
-    <!-- Drag handle -->
+    <!-- Drag handle + collapse toggle -->
     <div
       ref="handleEl"
-      class="flex items-center justify-center w-full cursor-grab active:cursor-grabbing
-             text-slate-600 hover:text-slate-400 transition-colors duration-150"
-      title="Drag to move toolbar"
+      class="flex items-center justify-between w-full cursor-grab active:cursor-grabbing"
     >
-      <svg width="20" height="8" viewBox="0 0 20 8" fill="currentColor">
-        <circle cx="4"  cy="2" r="1.5" />
-        <circle cx="10" cy="2" r="1.5" />
-        <circle cx="16" cy="2" r="1.5" />
-        <circle cx="4"  cy="6" r="1.5" />
-        <circle cx="10" cy="6" r="1.5" />
-        <circle cx="16" cy="6" r="1.5" />
-      </svg>
+      <!-- Dots -->
+      <div class="flex-1 flex items-center justify-center text-slate-600 hover:text-slate-400 transition-colors duration-150">
+        <svg width="20" height="8" viewBox="0 0 20 8" fill="currentColor">
+          <circle cx="4"  cy="2" r="1.5" />
+          <circle cx="10" cy="2" r="1.5" />
+          <circle cx="16" cy="2" r="1.5" />
+          <circle cx="4"  cy="6" r="1.5" />
+          <circle cx="10" cy="6" r="1.5" />
+          <circle cx="16" cy="6" r="1.5" />
+        </svg>
+      </div>
+      <!-- Collapse / expand button -->
+      <button
+        class="ml-1 w-5 h-5 flex items-center justify-center rounded text-slate-600
+               hover:text-slate-300 hover:bg-slate-800 transition-all duration-150
+               cursor-pointer"
+        :title="isCollapsed ? 'Expand toolbar' : 'Collapse toolbar'"
+        @click.stop="isCollapsed = !isCollapsed"
+      >
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+          <template v-if="isCollapsed">
+            <!-- chevron down (expand) -->
+            <polyline points="2,3 5,7 8,3" />
+          </template>
+          <template v-else>
+            <!-- chevron up (collapse) -->
+            <polyline points="2,7 5,3 8,7" />
+          </template>
+        </svg>
+      </button>
     </div>
 
-    <!-- Instrument buttons -->
+    <!-- Collapsible body -->
+    <template v-if="!isCollapsed">
+
     <div class="flex flex-col gap-1">
       <p class="text-slate-600 text-xs uppercase tracking-widest mb-1 text-center">Kit</p>
       <button
@@ -181,5 +206,6 @@ function defaultSymbol(id: InstrumentId): NoteSymbol {
         </button>
       </div>
     </div>
+    </template><!-- end collapsible body -->
   </div>
 </template>
