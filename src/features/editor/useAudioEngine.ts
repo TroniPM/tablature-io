@@ -13,15 +13,45 @@ function ctx(): AudioContext {
   return audioCtx
 }
 
+// ─── Noise buffer cache ───────────────────────────────────────────────────────
+// AudioBuffer data (the random PCM samples) is immutable and reusable across
+// multiple AudioBufferSourceNode instances. Pre-generate every duration that
+// the synthesis functions need so zero allocation happens during playback.
+// This is especially important on iOS where on-the-fly allocation during Play
+// can be silently dropped by the system.
+
+/** All noise durations (seconds) used by the synthesis functions below. */
+const NOISE_DURATIONS = [0.06, 0.18, 0.25, 0.35, 0.9] as const
+
+const noiseBufferCache = new Map<number, AudioBuffer>()
+
+function ensureNoiseCache(context: AudioContext): void {
+  for (const dur of NOISE_DURATIONS) {
+    if (noiseBufferCache.has(dur)) continue
+    const bufferSize = Math.ceil(context.sampleRate * dur)
+    const buffer = context.createBuffer(1, bufferSize, context.sampleRate)
+    const data = buffer.getChannelData(0)
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1
+    noiseBufferCache.set(dur, buffer)
+  }
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function noise(context: AudioContext, duration: number): AudioBufferSourceNode {
-  const bufferSize = Math.ceil(context.sampleRate * duration)
-  const buffer = context.createBuffer(1, bufferSize, context.sampleRate)
-  const data = buffer.getChannelData(0)
-  for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1
   const src = context.createBufferSource()
-  src.buffer = buffer
+  const cached = noiseBufferCache.get(duration)
+  if (cached) {
+    src.buffer = cached
+  } else {
+    // Cold-path fallback (should never happen after forceUnlockAudio ran).
+    const bufferSize = Math.ceil(context.sampleRate * duration)
+    const buffer = context.createBuffer(1, bufferSize, context.sampleRate)
+    const data = buffer.getChannelData(0)
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1
+    noiseBufferCache.set(duration, buffer)
+    src.buffer = buffer
+  }
   return src
 }
 
@@ -119,7 +149,42 @@ export function triggerNote(instrument: InstrumentId) {
   }
 }
 
-/** Call once on first user gesture to unlock the AudioContext. */
-export function unlockAudio() {
-  ctx()
+/**
+ * Aggressive synchronous unlocker for iOS AudioContext.
+ *
+ * Must be called directly from a user-gesture event handler (no await in the
+ * call chain before this function runs).  It:
+ *   1. Creates the AudioContext on first call.
+ *   2. Fires resume() without awaiting — iOS accepts this synchronous call.
+ *   3. Immediately plays a 1-frame silent buffer so iOS registers that audio
+ *      was produced synchronously within the same gesture call stack.
+ *
+ * Safe to call repeatedly; exits early if the context is already running.
+ */
+export function forceUnlockAudio(): void {
+  if (!audioCtx) audioCtx = new AudioContext()
+  if (audioCtx.state === 'running') return
+
+  audioCtx.resume() // fire-and-forget — no await
+
+  // "Proof of life" beep: a 440 Hz sine at near-zero volume for 50 ms.
+  // An oscillator (rather than a silent buffer) is more reliably recognised
+  // by iOS as a genuine audio event within the gesture call stack.
+  // DEBUG: you should hear a very subtle click/tone on the first screen tap;
+  //        if you do, the AudioContext is unlocked.
+  const now = audioCtx.currentTime
+  const o = audioCtx.createOscillator()
+  const g = audioCtx.createGain()
+  o.type = 'sine'
+  o.frequency.value = 440
+  g.gain.setValueAtTime(0.05, now)
+  g.gain.exponentialRampToValueAtTime(0.0001, now + 0.05)
+  o.connect(g)
+  g.connect(audioCtx.destination)
+  o.start(now)
+  o.stop(now + 0.05)
+
+  // Pre-warm noise buffers now, while we are inside a gesture call stack,
+  // so they are ready when the Playhead fires its first drum hit.
+  ensureNoiseCache(audioCtx)
 }

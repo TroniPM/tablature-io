@@ -6,7 +6,6 @@ import TabGrid from '@/features/editor/TabGrid.vue'
 import EditorToolbar from '@/features/editor/EditorToolbar.vue'
 import { useExport } from '@/features/editor/useExport'
 import { usePlayhead } from '@/features/editor/usePlayhead'
-import { unlockAudio } from '@/features/editor/useAudioEngine'
 
 const router = useRouter()
 const store = useTabStore()
@@ -38,7 +37,6 @@ function handleKeyDown(e: KeyboardEvent) {
     class="min-h-screen bg-slate-950 text-slate-100 flex flex-col"
     tabindex="-1"
     @keydown="handleKeyDown"
-    @pointerdown.once="unlockAudio()"
   >
     <!-- Header -->
     <header class="flex items-center justify-between px-6 py-3 border-b border-slate-800 shrink-0">
