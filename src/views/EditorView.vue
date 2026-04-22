@@ -8,6 +8,7 @@ import TopNavBar from '@/features/editor/TopNavBar.vue'
 import HistoryModal from '@/features/editor/HistoryModal.vue'
 import { useExport } from '@/features/editor/useExport'
 import { usePlayhead } from '@/features/editor/usePlayhead'
+import FooterBar from '@/components/FooterBar.vue'
 
 const store = useTabStore()
 const { t } = useI18n()
@@ -101,6 +102,7 @@ function handleKeyDown(e: KeyboardEvent) {
       <!-- Floating toolbar (respects showToolbar from store) -->
       <EditorToolbar v-if="store.showToolbar" />
     </main>
+    <FooterBar />
   </div>
 
   <!-- History modal -->

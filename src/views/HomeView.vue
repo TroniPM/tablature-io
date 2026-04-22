@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import FooterBar from '@/components/FooterBar.vue'
 
 const router = useRouter()
 const { t, tm } = useI18n()
@@ -85,11 +86,7 @@ const { t, tm } = useI18n()
     </main>
 
     <!-- ── Footer ────────────────────────────────────────────────────────────── -->
-    <footer class="flex items-center justify-center px-8 py-5 border-t border-slate-900">
-      <span class="text-slate-700 text-xs">
-      tablature<span class="text-emerald-600">.io</span> · {{ t('home.footer') }}
-      </span>
-    </footer>
+    <FooterBar />
 
   </div>
 </template>
