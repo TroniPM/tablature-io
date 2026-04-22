@@ -397,7 +397,9 @@ function handleToggleToolbar() {
                 {{ store.showToolbar ? t('options_menu.hide_toolbar') : t('options_menu.show_toolbar') }}
               </button>
             </li>
-
+            
+            <li class="my-1 border-t border-slate-700/60" />
+            
             <!-- Language submenu -->
             <li
               class="relative"
