@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useDraggable, useLocalStorage } from '@vueuse/core'
 import { useTabStore } from '@/stores/useTabStore'
 import { INSTRUMENT_ROWS, type InstrumentId, type NoteSymbol } from '@/types/tab'
 import { usePlayhead } from './usePlayhead'
 
 const store = useTabStore()
+const { t } = useI18n()
 
 // ─── Draggable toolbar position (persisted) ──────────────────────────────────
 const toolbarEl = ref<HTMLElement | null>(null)
@@ -87,7 +89,7 @@ function defaultSymbol(id: InstrumentId): NoteSymbol {
         class="ml-1 w-5 h-5 flex items-center justify-center rounded text-slate-600
                hover:text-slate-300 hover:bg-slate-800 transition-all duration-150
                cursor-pointer"
-        :title="isCollapsed ? 'Expand toolbar' : 'Collapse toolbar'"
+        :title="isCollapsed ? t('toolbar.expand') : t('toolbar.collapse')"
         @click.stop="isCollapsed = !isCollapsed"
       >
         <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
@@ -107,7 +109,7 @@ function defaultSymbol(id: InstrumentId): NoteSymbol {
     <template v-if="!isCollapsed">
 
     <div class="flex flex-col gap-1">
-      <p class="text-slate-600 text-xs uppercase tracking-widest mb-1 text-center">Kit</p>
+      <p class="text-slate-600 text-xs uppercase tracking-widest mb-1 text-center">{{ t('toolbar.kit') }}</p>
       <button
         v-for="row in INSTRUMENT_ROWS"
         :key="row.id"
@@ -130,12 +132,12 @@ function defaultSymbol(id: InstrumentId): NoteSymbol {
 
     <!-- Subdivision selector -->
     <div class="flex flex-col gap-1">
-      <p class="text-slate-600 text-xs uppercase tracking-widest mb-1 text-center">Grid</p>
+      <p class="text-slate-600 text-xs uppercase tracking-widest mb-1 text-center">{{ t('toolbar.grid') }}</p>
       <div class="flex gap-1 justify-center">
         <button
           v-for="sub in SUBDIVISIONS"
           :key="sub.value"
-          :title="`${sub.value === 1 ? 'Quarter' : sub.value === 2 ? 'Eighth' : 'Sixteenth'} notes`"
+          :title="`${sub.value === 1 ? t('toolbar.quarter_notes') : sub.value === 2 ? t('toolbar.eighth_notes') : t('toolbar.sixteenth_notes')}`"
           :class="[
             'w-8 h-8 rounded-lg text-sm transition-all duration-150',
             store.activeSubdivision === sub.value
@@ -155,7 +157,7 @@ function defaultSymbol(id: InstrumentId): NoteSymbol {
     <!-- Play / Stop -->
     <div class="border-t border-slate-800" />
     <div class="flex flex-col gap-1">
-      <p class="text-slate-600 text-xs uppercase tracking-widest mb-1 text-center">Transport</p>
+      <p class="text-slate-600 text-xs uppercase tracking-widest mb-1 text-center">{{ t('toolbar.transport') }}</p>
       <button
         :class="[
           'w-full px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all duration-150 border',
@@ -163,10 +165,10 @@ function defaultSymbol(id: InstrumentId): NoteSymbol {
             ? 'bg-rose-500/20 text-rose-400 border-rose-500/50 hover:bg-rose-500/30'
             : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/50 hover:bg-emerald-500/30',
         ]"
-        :title="store.isPlaying ? 'Stop (Space)' : `Play at ${store.document.bpm} BPM`"
+        :title="store.isPlaying ? t('toolbar.stop_title') : t('toolbar.play_title', { bpm: store.document.bpm })"
         @click="togglePlayback()"
       >
-        {{ store.isPlaying ? '⏹ Stop' : '▶ Play' }}
+        {{ store.isPlaying ? t('toolbar.stop') : t('toolbar.play') }}
       </button>
       <p class="text-slate-700 text-xs text-center tabular-nums">
         {{ store.document.bpm }} BPM
@@ -181,7 +183,7 @@ function defaultSymbol(id: InstrumentId): NoteSymbol {
         title="Add measure"
         @click="store.addBar()"
       >
-        + Bar
+        {{ t('toolbar.add_bar') }}
       </button>
       <div class="flex gap-1">
         <button
@@ -189,22 +191,22 @@ function defaultSymbol(id: InstrumentId): NoteSymbol {
           class="flex-1 py-1.5 rounded-lg text-xs transition-all duration-150
                  border border-transparent disabled:opacity-30 flex flex-col items-center gap-0.5
                  text-slate-400 hover:bg-slate-800 hover:text-slate-200 disabled:hover:bg-transparent"
-          title="Undo (Ctrl+Z)"
+          :title="t('toolbar.undo_title')"
           @click="store.undo()"
         >
           <span>↩</span>
-          <span>Undo</span>
+          <span>{{ t('toolbar.undo') }}</span>
         </button>
         <button
           :disabled="!store.canRedo"
           class="flex-1 py-1.5 rounded-lg text-xs transition-all duration-150
                  border border-transparent disabled:opacity-30 flex flex-col items-center gap-0.5
                  text-slate-400 hover:bg-slate-800 hover:text-slate-200 disabled:hover:bg-transparent"
-          title="Redo (Ctrl+Y)"
+          :title="t('toolbar.redo_title')"
           @click="store.redo()"
         >
           <span>↪</span>
-          <span>Redo</span>
+          <span>{{ t('toolbar.redo') }}</span>
         </button>
       </div>
     </div>

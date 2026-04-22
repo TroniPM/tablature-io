@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useTabStore } from '@/stores/useTabStore'
 import TabGrid from '@/features/editor/TabGrid.vue'
 import EditorToolbar from '@/features/editor/EditorToolbar.vue'
@@ -9,6 +10,7 @@ import { useExport } from '@/features/editor/useExport'
 import { usePlayhead } from '@/features/editor/usePlayhead'
 
 const store = useTabStore()
+const { t } = useI18n()
 
 // ─── Export ──────────────────────────────────────────────────────────────────
 const tabGridRef = ref<InstanceType<typeof TabGrid> | null>(null)
@@ -64,14 +66,14 @@ function handleKeyDown(e: KeyboardEvent) {
                  border border-slate-800 transition-all duration-200"
           @click="store.addBar()"
         >
-          + Add Bar
+          {{ t('editor_view.add_bar') }}
         </button>
         <button
           class="px-3 py-1.5 rounded-lg text-xs text-slate-400 hover:bg-slate-800 hover:text-slate-200
                  border border-slate-800 transition-all duration-200"
           @click="store.clearAll()"
         >
-          Clear All
+          {{ t('editor_view.clear_all') }}
         </button>
 
         <!-- Export error -->
@@ -80,13 +82,13 @@ function handleKeyDown(e: KeyboardEvent) {
         <!-- Status hint -->
         <div class="ml-auto flex items-center gap-2 text-xs text-slate-600">
           <span v-if="store.activeInstrument" class="text-emerald-400">
-            Stamp: <span class="font-mono font-bold">{{ store.activeInstrument }}</span>
+            {{ t('editor_view.stamp') }}: <span class="font-mono font-bold">{{ store.activeInstrument }}</span>
           </span>
-          <span v-else class="text-slate-600">Clique na grade para inserir • Arraste para mover</span>
+          <span v-else class="text-slate-600">{{ t('editor_view.hint_idle') }}</span>
           <span class="text-slate-700">|</span>
           <span>
-            <kbd class="bg-slate-800 px-1 rounded text-slate-400">Space</kbd> play ·
-            <kbd class="bg-slate-800 px-1 rounded text-slate-400">Del</kbd> delete
+            <kbd class="bg-slate-800 px-1 rounded text-slate-400">Space</kbd> {{ t('editor_view.hint_play') }} ·
+            <kbd class="bg-slate-800 px-1 rounded text-slate-400">Del</kbd> {{ t('editor_view.hint_delete') }}
           </span>
         </div>
       </div>

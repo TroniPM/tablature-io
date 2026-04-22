@@ -1,14 +1,16 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import { useTabStore } from '@/stores/useTabStore'
 
 const store = useTabStore()
+const { t, locale } = useI18n()
 
 const emit = defineEmits<{
   (e: 'close'): void
 }>()
 
 function formatDate(ts: number): string {
-  return new Intl.DateTimeFormat('pt-BR', {
+  return new Intl.DateTimeFormat(locale.value, {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
@@ -51,7 +53,7 @@ function deleteProject(id: string) {
         >
           <!-- Header -->
           <div class="flex items-center justify-between px-5 py-4 border-b border-slate-800">
-            <h2 class="text-sm font-semibold text-slate-200">Histórico de Tablaturas</h2>
+            <h2 class="text-sm font-semibold text-slate-200">{{ t('history.title') }}</h2>
             <button
               class="text-slate-500 hover:text-slate-200 transition-colors text-lg leading-none"
               @click="emit('close')"
@@ -83,12 +85,12 @@ function deleteProject(id: string) {
                     ? 'text-slate-100 font-medium'
                     : 'text-slate-300'"
                 >
-                  {{ project.name || 'Tablatura sem título' }}
+                  {{ project.name || t('history.untitled') }}
                 </p>
                 <p class="text-xs text-slate-500 mt-0.5 flex items-center gap-2">
                   <span>BPM: {{ project.bpm }}</span>
                   <span class="text-slate-700">·</span>
-                  <span>Última modificação: {{ formatDate(project.lastModified) }}</span>
+                  <span>{{ t('history.last_modified') }}: {{ formatDate(project.lastModified) }}</span>
                 </p>
               </div>
 
@@ -100,19 +102,19 @@ function deleteProject(id: string) {
                          hover:bg-emerald-700 hover:text-white transition-colors"
                   @click="openProject(project.id)"
                 >
-                  Abrir
+                  {{ t('history.open') }}
                 </button>
                 <span
                   v-else
                   class="px-3 py-1 text-xs rounded-md bg-emerald-900/40 text-emerald-400
                          border border-emerald-800"
                 >
-                  Aberto
+                  {{ t('history.opened') }}
                 </span>
                 <button
                   class="p-1.5 rounded-md text-slate-500 hover:bg-red-950 hover:text-red-400
                          transition-colors"
-                  title="Excluir"
+                  :title="t('history.delete')"
                   @click="deleteProject(project.id)"
                 >
                   <!-- Trash icon -->
@@ -137,21 +139,21 @@ function deleteProject(id: string) {
 
             <!-- Empty state -->
             <li v-if="store.sortedProjects.length === 0" class="px-5 py-8 text-center">
-              <p class="text-sm text-slate-500">Nenhuma tablatura guardada.</p>
+              <p class="text-sm text-slate-500">{{ t('history.empty') }}</p>
             </li>
           </ul>
 
           <!-- Footer -->
           <div class="px-5 py-3 border-t border-slate-800 flex justify-between items-center">
             <span class="text-xs text-slate-600">
-              {{ store.projects.length }} tablatura{{ store.projects.length !== 1 ? 's' : '' }}
+              {{ t('history.footer_count', store.projects.length) }}
             </span>
             <button
               class="px-4 py-1.5 text-xs rounded-lg bg-slate-800 text-slate-300
                      hover:bg-slate-700 transition-colors"
               @click="emit('close')"
             >
-              Fechar
+              {{ t('history.close') }}
             </button>
           </div>
         </div>

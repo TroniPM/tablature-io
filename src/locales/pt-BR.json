@@ -1,0 +1,97 @@
+{
+  "nav": {
+    "file": "Arquivo",
+    "edit": "Editar",
+    "options": "Opções"
+  },
+  "file_menu": {
+    "new": "Nova Tablatura",
+    "save": "Salvar",
+    "load": "Carregar projeto (.json)",
+    "history": "Histórico",
+    "export": "Exportar",
+    "export_pdf": "PDF",
+    "export_png": "PNG",
+    "export_json": "Projeto (.json)"
+  },
+  "edit_menu": {
+    "undo": "Desfazer",
+    "redo": "Refazer"
+  },
+  "options_menu": {
+    "hide_toolbar": "Ocultar Toolbar",
+    "show_toolbar": "Mostrar Toolbar",
+    "language": "Idioma"
+  },
+  "language": {
+    "pt_BR": "Português (Brasil)",
+    "en": "English",
+    "es": "Español"
+  },
+  "editor_view": {
+    "add_bar": "+ Compasso",
+    "clear_all": "Limpar Tudo",
+    "stamp": "Instrumento",
+    "hint_idle": "Clique na grade para inserir diretamente • Selecione nota e arraste para mover",
+    "hint_play": "tocar",
+    "hint_delete": "apagar"
+  },
+  "editor": {
+    "project_label": "Projeto",
+    "bpm_label": "BPM",
+    "saved": "Salvo ✓",
+    "untitled": "Tablatura sem título"
+  },
+  "toolbar": {
+    "kit": "Kit",
+    "grid": "Grid",
+    "transport": "Transport",
+    "quarter_notes": "Semínima",
+    "eighth_notes": "Colcheia",
+    "sixteenth_notes": "Semicolcheia",
+    "play": "▶ Play",
+    "stop": "⏹ Stop",
+    "play_title": "Tocar a {bpm} BPM",
+    "stop_title": "Parar (Espaço)",
+    "add_bar": "+ Compasso",
+    "undo": "Desfazer",
+    "redo": "Refazer",
+    "undo_title": "Desfazer (Ctrl+Z)",
+    "redo_title": "Refazer (Ctrl+Y)",
+    "expand": "Expandir toolbar",
+    "collapse": "Recolher toolbar"
+  },
+  "history": {
+    "title": "Histórico de Tablaturas",
+    "open": "Abrir",
+    "opened": "Aberto",
+    "delete": "Excluir",
+    "last_modified": "Última modificação",
+    "empty": "Nenhuma tablatura guardada.",
+    "footer_count": "nenhuma tablatura | {n} tablatura | {n} tablaturas",
+    "close": "Fechar",
+    "untitled": "Tablatura sem título"
+  },
+  "home": {
+    "open_editor": "Abrir Editor →",
+    "badge": "Editor vetorial SVG · Gratuito · Open Source",
+    "headline_1": "Escreva tablaturas de bateria",
+    "headline_2": "na velocidade do som.",
+    "sub": "Um editor vetorial {svg}, com drag-and-drop inteligente, playback rítmico e exportação perfeita para {pdf} e {png}. Nenhuma instalação — roda direto no navegador.",
+    "cta_button": "Abrir Editor",
+    "cta_sub": "Sem cadastro · Trabalho salvo automaticamente",
+    "footer": "feito com SVG, Vue 3 & Web Audio API",
+    "features": [
+      "SVG nativo",
+      "Drag & Drop",
+      "Snap rítmico",
+      "Exportar PDF vetorial",
+      "Exportar PNG 2×",
+      "Salvar / Carregar JSON",
+      "Undo / Redo",
+      "Playback BPM",
+      "Web Audio API",
+      "Dark Mode"
+    ]
+  }
+}

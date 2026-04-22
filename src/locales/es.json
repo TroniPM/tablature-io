@@ -1,0 +1,97 @@
+{
+  "nav": {
+    "file": "Archivo",
+    "edit": "Editar",
+    "options": "Opciones"
+  },
+  "file_menu": {
+    "new": "Nueva Tablatura",
+    "save": "Guardar",
+    "load": "Cargar proyecto (.json)",
+    "history": "Historial",
+    "export": "Exportar",
+    "export_pdf": "PDF",
+    "export_png": "PNG",
+    "export_json": "Proyecto (.json)"
+  },
+  "edit_menu": {
+    "undo": "Deshacer",
+    "redo": "Rehacer"
+  },
+  "options_menu": {
+    "hide_toolbar": "Ocultar Barra",
+    "show_toolbar": "Mostrar Barra",
+    "language": "Idioma"
+  },
+  "language": {
+    "pt_BR": "Português (Brasil)",
+    "en": "English",
+    "es": "Español"
+  },
+  "editor_view": {
+    "add_bar": "+ Compás",
+    "clear_all": "Limpiar Todo",
+    "stamp": "Instrumento",
+    "hint_idle": "Haz clic en la cuadrícula para insertar directamente • Selecciona una nota y arrastra para moverla",
+    "hint_play": "tocar",
+    "hint_delete": "borrar"
+  },
+  "editor": {
+    "project_label": "Proyecto",
+    "bpm_label": "BPM",
+    "saved": "Guardado ✓",
+    "untitled": "Tablatura sin título"
+  },
+  "toolbar": {
+    "kit": "Kit",
+    "grid": "Grid",
+    "transport": "Transport",
+    "quarter_notes": "Negra",
+    "eighth_notes": "Corchea",
+    "sixteenth_notes": "Semicorchea",
+    "play": "▶ Play",
+    "stop": "⏹ Stop",
+    "play_title": "Tocar a {bpm} BPM",
+    "stop_title": "Detener (Espacio)",
+    "add_bar": "+ Compás",
+    "undo": "Deshacer",
+    "redo": "Rehacer",
+    "undo_title": "Deshacer (Ctrl+Z)",
+    "redo_title": "Rehacer (Ctrl+Y)",
+    "expand": "Expandir barra",
+    "collapse": "Colapsar barra"
+  },
+  "history": {
+    "title": "Historial de Tablaturas",
+    "open": "Abrir",
+    "opened": "Abierto",
+    "delete": "Eliminar",
+    "last_modified": "Última modificación",
+    "empty": "No hay tablaturas guardadas.",
+    "footer_count": "ninguna tablatura | {n} tablatura | {n} tablaturas",
+    "close": "Cerrar",
+    "untitled": "Tablatura sin título"
+  },
+  "home": {
+    "open_editor": "Abrir Editor →",
+    "badge": "Editor vectorial SVG · Gratuito · Open Source",
+    "headline_1": "Escribe tablaturas de batería",
+    "headline_2": "a la velocidad del sonido.",
+    "sub": "Un editor vectorial {svg}, con drag-and-drop inteligente, reproducción rítmica y exportación perfecta a {pdf} y {png}. Sin instalación — corre directo en el navegador.",
+    "cta_button": "Abrir Editor",
+    "cta_sub": "Sin registro · Trabajo guardado automáticamente",
+    "footer": "hecho con SVG, Vue 3 & Web Audio API",
+    "features": [
+      "SVG nativo",
+      "Drag & Drop",
+      "Snap rítmico",
+      "Exportar PDF vectorial",
+      "Exportar PNG 2×",
+      "Guardar / Cargar JSON",
+      "Undo / Redo",
+      "Playback BPM",
+      "Web Audio API",
+      "Dark Mode"
+    ]
+  }
+}

@@ -1,0 +1,97 @@
+{
+  "nav": {
+    "file": "File",
+    "edit": "Edit",
+    "options": "Options"
+  },
+  "file_menu": {
+    "new": "New Tablature",
+    "save": "Save",
+    "load": "Load project (.json)",
+    "history": "History",
+    "export": "Export",
+    "export_pdf": "PDF",
+    "export_png": "PNG",
+    "export_json": "Project (.json)"
+  },
+  "edit_menu": {
+    "undo": "Undo",
+    "redo": "Redo"
+  },
+  "options_menu": {
+    "hide_toolbar": "Hide Toolbar",
+    "show_toolbar": "Show Toolbar",
+    "language": "Language"
+  },
+  "language": {
+    "pt_BR": "Português (Brasil)",
+    "en": "English",
+    "es": "Español"
+  },
+  "editor_view": {
+    "add_bar": "+ Add Bar",
+    "clear_all": "Clear All",
+    "stamp": "Stamp",
+    "hint_idle": "Click on the grid to insert directly • Select a note and drag to move",
+    "hint_play": "play",
+    "hint_delete": "delete"
+  },
+  "editor": {
+    "project_label": "Project",
+    "bpm_label": "BPM",
+    "saved": "Saved ✓",
+    "untitled": "Untitled Tablature"
+  },
+  "toolbar": {
+    "kit": "Kit",
+    "grid": "Grid",
+    "transport": "Transport",
+    "quarter_notes": "Quarter notes",
+    "eighth_notes": "Eighth notes",
+    "sixteenth_notes": "Sixteenth notes",
+    "play": "▶ Play",
+    "stop": "⏹ Stop",
+    "play_title": "Play at {bpm} BPM",
+    "stop_title": "Stop (Space)",
+    "add_bar": "+ Bar",
+    "undo": "Undo",
+    "redo": "Redo",
+    "undo_title": "Undo (Ctrl+Z)",
+    "redo_title": "Redo (Ctrl+Y)",
+    "expand": "Expand toolbar",
+    "collapse": "Collapse toolbar"
+  },
+  "history": {
+    "title": "Tablature History",
+    "open": "Open",
+    "opened": "Opened",
+    "delete": "Delete",
+    "last_modified": "Last modified",
+    "empty": "No saved tablatures.",
+    "footer_count": "no tablatures | {n} tablature | {n} tablatures",
+    "close": "Close",
+    "untitled": "Untitled Tablature"
+  },
+  "home": {
+    "open_editor": "Open Editor →",
+    "badge": "SVG vector editor · Free · Open Source",
+    "headline_1": "Write drum tablatures",
+    "headline_2": "at the speed of sound.",
+    "sub": "A {svg} vector editor, with intelligent drag-and-drop, rhythmic playback and perfect export to {pdf} and {png}. No installation — runs directly in the browser.",
+    "cta_button": "Open Editor",
+    "cta_sub": "No registration · Work saved automatically",
+    "footer": "made with SVG, Vue 3 & Web Audio API",
+    "features": [
+      "Native SVG",
+      "Drag & Drop",
+      "Rhythmic Snap",
+      "Vector PDF Export",
+      "PNG 2× Export",
+      "Save / Load JSON",
+      "Undo / Redo",
+      "BPM Playback",
+      "Web Audio API",
+      "Dark Mode"
+    ]
+  }
+}

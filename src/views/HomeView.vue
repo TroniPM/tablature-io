@@ -1,20 +1,9 @@
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 
 const router = useRouter()
-
-const features = [
-  'SVG nativo',
-  'Drag & Drop',
-  'Snap rítmico',
-  'Exportar PDF vetorial',
-  'Exportar PNG 2×',
-  'Salvar / Carregar JSON',
-  'Undo / Redo',
-  'Playback BPM',
-  'Web Audio API',
-  'Dark Mode',
-]
+const { t, tm } = useI18n()
 </script>
 
 <template>
@@ -30,7 +19,7 @@ const features = [
                text-slate-300 hover:bg-slate-800 hover:text-slate-100 transition-all duration-200"
         @click="router.push('/editor')"
       >
-        Abrir Editor →
+        {{ t('home.open_editor') }}
       </button>
     </nav>
 
@@ -42,25 +31,29 @@ const features = [
                   bg-emerald-500/10 border border-emerald-500/20 text-emerald-400
                   text-xs font-medium tracking-wide mb-8">
         <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-        Editor vetorial SVG · Gratuito · Open Source
+        {{ t('home.badge') }}
       </div>
 
       <!-- Headline -->
       <h1 class="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.08] mb-6 max-w-4xl">
-        Escreva tablaturas de bateria
+        {{ t('home.headline_1') }}
         <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-300">
-          na velocidade do som.
+          {{ t('home.headline_2') }}
         </span>
       </h1>
 
       <!-- Sub-headline -->
-      <p class="text-slate-400 text-lg sm:text-xl max-w-2xl leading-relaxed mb-10">
-        Um editor vetorial <span class="text-slate-200 font-medium">SVG</span>,
-        com drag-and-drop inteligente, playback rítmico e exportação perfeita
-        para <span class="text-slate-200 font-medium">PDF</span> e
-        <span class="text-slate-200 font-medium">PNG</span>.
-        Nenhuma instalação — roda direto no navegador.
-      </p>
+      <i18n-t keypath="home.sub" tag="p" class="text-slate-400 text-lg sm:text-xl max-w-2xl leading-relaxed mb-10">
+        <template #svg>
+          <span class="text-slate-200 font-medium">SVG</span>
+        </template>
+        <template #pdf>
+          <span class="text-slate-200 font-medium">PDF</span>
+        </template>
+        <template #png>
+          <span class="text-slate-200 font-medium">PNG</span>
+        </template>
+      </i18n-t>
 
       <!-- CTA -->
       <div class="flex flex-col sm:flex-row items-center gap-4">
@@ -71,17 +64,17 @@ const features = [
                  transition-all duration-200 active:scale-95"
           @click="router.push('/editor')"
         >
-          Abrir Editor
+          {{ t('home.cta_button') }}
         </button>
         <span class="text-slate-600 text-sm">
-          Sem cadastro · Trabalho salvo automaticamente
+          {{ t('home.cta_sub') }}
         </span>
       </div>
 
       <!-- Feature pills -->
       <div class="flex flex-wrap justify-center gap-3 mt-16">
         <span
-          v-for="feat in features"
+          v-for="feat in (tm('home.features') as string[])"
           :key="feat"
           class="px-3 py-1.5 rounded-full bg-slate-900 border border-slate-800
                  text-slate-400 text-xs font-mono"
@@ -94,7 +87,7 @@ const features = [
     <!-- ── Footer ────────────────────────────────────────────────────────────── -->
     <footer class="flex items-center justify-center px-8 py-5 border-t border-slate-900">
       <span class="text-slate-700 text-xs">
-        tablature<span class="text-emerald-600">.io</span> · feito com SVG, Vue 3 &amp; Web Audio API
+      tablature<span class="text-emerald-600">.io</span> · {{ t('home.footer') }}
       </span>
     </footer>
 

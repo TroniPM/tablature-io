@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
+import { setLocale, type SupportedLocale } from '@/i18n'
 import { useTabStore } from '@/stores/useTabStore'
 
 const store = useTabStore()
+const { t, locale } = useI18n()
 
 // ─── Emits ────────────────────────────────────────────────────────────────────
 const emit = defineEmits<{
@@ -50,10 +53,17 @@ function closeMenus() {
   activeMenu.value = null
   isMenuBarActive.value = false
   exportSubOpen.value = false
+  langSubOpen.value = false
 }
 
-// Sub-menu for Exportar
+function handleSetLocale(loc: SupportedLocale) {
+  setLocale(loc)
+  closeMenus()
+}
+
+// Sub-menus
 const exportSubOpen = ref(false)
+const langSubOpen = ref(false)
 
 // Close on outside click
 function onDocClick(e: MouseEvent) {
@@ -80,7 +90,7 @@ function focusName() {
 
 function commitName() {
   const trimmed = localName.value.trim()
-  store.renameCurrentProject(trimmed || 'Tablatura sem título')
+  store.renameCurrentProject(trimmed || t('editor.untitled'))
   localName.value = store.document.title
 }
 
@@ -115,7 +125,7 @@ function onBpmKeydown(e: KeyboardEvent) {
 // ─── Actions ──────────────────────────────────────────────────────────────────
 function handleSave() {
   store.forceSave()
-  showToast('Salvo ✓')
+  showToast(t('editor.saved'))
   closeMenus()
 }
 
@@ -189,7 +199,7 @@ function handleToggleToolbar() {
           @click.stop="toggleMenu('arquivo')"
           @mouseenter="hoverMenu('arquivo')"
         >
-          Arquivo
+          {{ t('nav.file') }}
         </button>
 
         <Transition
@@ -211,7 +221,7 @@ function handleToggleToolbar() {
                        hover:text-slate-100 transition-colors"
                 @click="handleNewProject"
               >
-                Nova Tablatura
+                {{ t('file_menu.new') }}
               </button>
             </li>
             <li class="my-1 border-t border-slate-700/60" />
@@ -221,7 +231,7 @@ function handleToggleToolbar() {
                        hover:text-slate-100 transition-colors"
                 @click="handleSave"
               >
-                Salvar
+                {{ t('file_menu.save') }}
                 <span class="float-right text-slate-500">Ctrl+S</span>
               </button>
             </li>
@@ -231,7 +241,7 @@ function handleToggleToolbar() {
                        hover:text-slate-100 transition-colors"
                 @click="handleLoadJSON"
               >
-                Carregar projeto (.json)
+                {{ t('file_menu.load') }}
               </button>
             </li>
             <li>
@@ -240,7 +250,7 @@ function handleToggleToolbar() {
                        hover:text-slate-100 transition-colors"
                 @click="handleHistory"
               >
-                Histórico
+                {{ t('file_menu.history') }}
               </button>
             </li>
             <li class="my-1 border-t border-slate-700/60" />
@@ -255,7 +265,7 @@ function handleToggleToolbar() {
                 class="w-full text-left px-4 py-1.5 text-xs text-slate-300 hover:bg-slate-800
                        hover:text-slate-100 transition-colors flex justify-between"
               >
-                Exportar
+                {{ t('file_menu.export') }}
                 <span class="text-slate-500">▸</span>
               </button>
               <ul
@@ -269,7 +279,7 @@ function handleToggleToolbar() {
                            hover:bg-slate-800 hover:text-slate-100 transition-colors"
                     @click="handleExportPDF"
                   >
-                    PDF
+                    {{ t('file_menu.export_pdf') }}
                   </button>
                 </li>
                 <li>
@@ -278,7 +288,7 @@ function handleToggleToolbar() {
                            hover:bg-slate-800 hover:text-slate-100 transition-colors"
                     @click="handleExportImage"
                   >
-                    PNG
+                    {{ t('file_menu.export_png') }}
                   </button>
                 </li>
                 <li>
@@ -287,7 +297,7 @@ function handleToggleToolbar() {
                            hover:bg-slate-800 hover:text-slate-100 transition-colors"
                     @click="handleExportJSON"
                   >
-                    Projeto (.json)
+                    {{ t('file_menu.export_json') }}
                   </button>
                 </li>
               </ul>
@@ -304,7 +314,7 @@ function handleToggleToolbar() {
           @click.stop="toggleMenu('editar')"
           @mouseenter="hoverMenu('editar')"
         >
-          Editar
+          {{ t('nav.edit') }}
         </button>
 
         <Transition
@@ -329,7 +339,7 @@ function handleToggleToolbar() {
                 :disabled="!store.canUndo"
                 @click="handleUndo"
               >
-                Desfazer
+                {{ t('edit_menu.undo') }}
                 <span class="text-slate-500">Ctrl+Z</span>
               </button>
             </li>
@@ -342,7 +352,7 @@ function handleToggleToolbar() {
                 :disabled="!store.canRedo"
                 @click="handleRedo"
               >
-                Refazer
+                {{ t('edit_menu.redo') }}
                 <span class="text-slate-500">Ctrl+Y</span>
               </button>
             </li>
@@ -358,7 +368,7 @@ function handleToggleToolbar() {
           @click.stop="toggleMenu('opcoes')"
           @mouseenter="hoverMenu('opcoes')"
         >
-          Opções
+          {{ t('nav.options') }}
         </button>
 
         <Transition
@@ -384,8 +394,71 @@ function handleToggleToolbar() {
                   class="inline-block w-3 h-3 rounded-sm border border-slate-500"
                   :class="store.showToolbar ? 'bg-emerald-500 border-emerald-500' : 'bg-transparent'"
                 />
-                {{ store.showToolbar ? 'Ocultar Toolbar' : 'Mostrar Toolbar' }}
+                {{ store.showToolbar ? t('options_menu.hide_toolbar') : t('options_menu.show_toolbar') }}
               </button>
+            </li>
+
+            <!-- Language submenu -->
+            <li
+              class="relative"
+              @mouseenter="langSubOpen = true"
+              @mouseleave="langSubOpen = false"
+            >
+              <button
+                class="w-full text-left px-4 py-1.5 text-xs text-slate-300 hover:bg-slate-800
+                       hover:text-slate-100 transition-colors flex justify-between"
+              >
+                {{ t('options_menu.language') }}
+                <span class="text-slate-500">▸</span>
+              </button>
+              <ul
+                v-if="langSubOpen"
+                class="absolute left-full top-0 min-w-48 bg-slate-900 border border-slate-700
+                       rounded-lg shadow-2xl py-1"
+              >
+                <li>
+                  <button
+                    class="w-full text-left px-4 py-1.5 text-xs text-slate-300
+                           hover:bg-slate-800 hover:text-slate-100 transition-colors
+                           flex items-center justify-between"
+                    @click="handleSetLocale('pt-BR')"
+                  >
+                    <span class="flex items-center gap-2">
+                      <span>🇧🇷</span>
+                      {{ t('language.pt_BR') }}
+                    </span>
+                    <span v-if="locale === 'pt-BR'" class="text-emerald-400">✓</span>
+                  </button>
+                </li>
+                <li>
+                  <button
+                    class="w-full text-left px-4 py-1.5 text-xs text-slate-300
+                           hover:bg-slate-800 hover:text-slate-100 transition-colors
+                           flex items-center justify-between"
+                    @click="handleSetLocale('en')"
+                  >
+                    <span class="flex items-center gap-2">
+                      <span>🇺🇸</span>
+                      {{ t('language.en') }}
+                    </span>
+                    <span v-if="locale === 'en'" class="text-emerald-400">✓</span>
+                  </button>
+                </li>
+                <li>
+                  <button
+                    class="w-full text-left px-4 py-1.5 text-xs text-slate-300
+                           hover:bg-slate-800 hover:text-slate-100 transition-colors
+                           flex items-center justify-between"
+                    @click="handleSetLocale('es')"
+                  >
+                    <span class="flex items-center gap-2">
+                      <span>🇪🇸</span>
+                      {{ t('language.es') }}
+                    </span>
+                    <span v-if="locale === 'es'" class="text-emerald-400">✓</span>
+                  </button>
+                </li>
+              </ul>
             </li>
           </ul>
         </Transition>
@@ -397,12 +470,12 @@ function handleToggleToolbar() {
 
       <!-- Nome do projeto -->
       <label class="flex items-center gap-1.5">
-        <span class="text-xs text-slate-500 shrink-0">Projeto</span>
+        <span class="text-xs text-slate-500 shrink-0">{{ t('editor.project_label') }}</span>
         <input
           ref="nameInput"
           v-model="localName"
           type="text"
-          placeholder="Tablatura sem título"
+          :placeholder="t('editor.untitled')"
           class="w-52 text-sm text-slate-200 bg-transparent border-b border-transparent
                  hover:border-slate-600 focus:border-slate-400 focus:outline-none
                  placeholder:text-slate-600 transition-colors px-1 py-0.5"
@@ -417,7 +490,7 @@ function handleToggleToolbar() {
 
       <!-- BPM -->
       <label class="flex items-center gap-1.5">
-        <span class="text-xs text-slate-500 shrink-0">BPM</span>
+        <span class="text-xs text-slate-500 shrink-0">{{ t('editor.bpm_label') }}</span>
         <input
           v-model="localBpm"
           type="number"
