@@ -200,7 +200,7 @@ const cursorStyle = computed(() => {
         <text
           v-for="(row, i) in INSTRUMENT_ROWS"
           :key="row.id"
-          :x="GRID.LABEL_WIDTH - 8"
+          :x="GRID.LABEL_WIDTH - 13"
           :y="rowY(i)"
           text-anchor="end"
           dominant-baseline="middle"

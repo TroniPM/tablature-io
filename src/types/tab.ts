@@ -62,7 +62,7 @@ export const GRID = {
   /** Pixels between two adjacent instrument rows */
   ROW_HEIGHT: 40,
   /** Left margin for instrument labels */
-  LABEL_WIDTH: 60,
+  LABEL_WIDTH: 76,
   /** Top padding before the first row */
   TOP_PADDING: 20,
   /** Supported subdivisions per beat (1 = quarter, 2 = eighth, 4 = sixteenth) */
