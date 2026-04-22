@@ -467,8 +467,8 @@ function handleToggleToolbar() {
       </div>
     </div>
 
-    <!-- Centre: project name + BPM -->
-    <div class="flex-1 flex items-center justify-center gap-4 px-4">
+    <!-- Centre: project name + BPM (desktop only) -->
+    <div class="flex-1 hidden lg:flex items-center justify-center gap-4 px-4">
 
       <!-- Nome do projeto -->
       <label class="flex items-center gap-1.5">
@@ -511,8 +511,49 @@ function handleToggleToolbar() {
     </div>
 
     <!-- Right spacer (mirrors logo width for perfect centering) -->
-    <div class="w-28 shrink-0" />
+    <div class="w-28 shrink-0 hidden lg:block" />
   </nav>
+
+  <!-- ── Mobile/tablet: project name + BPM bar ──────────────────────────── -->
+  <div class="fixed top-9 left-0 right-0 z-40 lg:hidden h-9 bg-slate-950 border-b border-slate-800
+              flex items-center gap-4 px-3">
+    <!-- Nome do projeto -->
+    <label class="flex items-center gap-1.5">
+      <span class="text-xs text-slate-500 shrink-0">{{ t('editor.project_label') }}</span>
+      <input
+        v-model="localName"
+        type="text"
+        :placeholder="t('editor.untitled')"
+        class="w-40 text-sm text-slate-200 bg-transparent border-b border-transparent
+               hover:border-slate-600 focus:border-slate-400 focus:outline-none
+               placeholder:text-slate-600 transition-colors px-1 py-0.5"
+        @blur="commitName"
+        @keydown="onNameKeydown"
+      />
+    </label>
+
+    <!-- Divider -->
+    <span class="w-px h-4 bg-slate-700 shrink-0" />
+
+    <!-- BPM -->
+    <label class="flex items-center gap-1.5">
+      <span class="text-xs text-slate-500 shrink-0">{{ t('editor.bpm_label') }}</span>
+      <input
+        v-model="localBpm"
+        type="number"
+        min="20"
+        max="400"
+        step="1"
+        class="w-14 text-sm text-slate-200 bg-transparent border-b border-transparent
+               hover:border-slate-600 focus:border-slate-400 focus:outline-none
+               placeholder:text-slate-600 transition-colors px-1 py-0.5
+               [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none
+               [&::-webkit-inner-spin-button]:appearance-none"
+        @blur="commitBpm"
+        @keydown="onBpmKeydown"
+      />
+    </label>
+  </div>
 
   <!-- ── Toast notification ─────────────────────────────────────────────── -->
   <Teleport to="body">

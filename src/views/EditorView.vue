@@ -52,7 +52,7 @@ function handleKeyDown(e: KeyboardEvent) {
 
   <!-- Main editor — offset top by nav height (pt-9) -->
   <div
-    class="min-h-screen bg-slate-950 text-slate-100 flex flex-col pt-9"
+    class="min-h-screen bg-slate-950 text-slate-100 flex flex-col pt-[4.5rem] lg:pt-9"
     tabindex="-1"
     @keydown="handleKeyDown"
   >
