@@ -4,10 +4,16 @@
  */
 import type { InstrumentId } from '@/types/tab'
 
+// Safari on iOS < 14.5 shipped the AudioContext under the webkit prefix.
+// The cast is required because TypeScript's lib.dom doesn't include it.
+const AudioCtxImpl =
+  (window.AudioContext ??
+  (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext) as typeof AudioContext
+
 let audioCtx: AudioContext | null = null
 
 function ctx(): AudioContext {
-  if (!audioCtx) audioCtx = new AudioContext()
+  if (!audioCtx) audioCtx = new AudioCtxImpl()
   // Resume if browser suspended it (autoplay policy)
   if (audioCtx.state === 'suspended') audioCtx.resume()
   return audioCtx
@@ -150,41 +156,31 @@ export function triggerNote(instrument: InstrumentId) {
 }
 
 /**
- * Aggressive synchronous unlocker for iOS AudioContext.
+ * Synchronous iOS AudioContext unlocker. Must be called directly from a user
+ * gesture handler (touchstart / touchend / click) — no async calls before it.
  *
- * Must be called directly from a user-gesture event handler (no await in the
- * call chain before this function runs).  It:
- *   1. Creates the AudioContext on first call.
- *   2. Fires resume() without awaiting — iOS accepts this synchronous call.
- *   3. Immediately plays a 1-frame silent buffer so iOS registers that audio
- *      was produced synchronously within the same gesture call stack.
- *
- * Safe to call repeatedly; exits early if the context is already running.
+ * Strategy:
+ *  1. Create the AudioContext with a webkit-prefix fallback for iOS < 14.5.
+ *  2. Pre-warm the noise buffer cache BEFORE the early-return so drums never
+ *     allocate buffers on-the-fly during playback (critical on iOS).
+ *  3. If already running, return. Otherwise call resume() fire-and-forget and
+ *     schedule a 1-frame silent buffer at the context's NATIVE sample rate.
+ *     Using ctx.sampleRate (not hardcoded 22050) prevents the silent format-
+ *     mismatch that some iOS builds silently reject.
  */
 export function forceUnlockAudio(): void {
-  if (!audioCtx) audioCtx = new AudioContext()
+  if (!audioCtx) audioCtx = new AudioCtxImpl()
+
+  // Always ensure the noise cache is warm — cost-free if already populated.
+  ensureNoiseCache(audioCtx)
+
   if (audioCtx.state === 'running') return
 
   audioCtx.resume() // fire-and-forget — no await
 
-  // "Proof of life" beep: a 440 Hz sine at near-zero volume for 50 ms.
-  // An oscillator (rather than a silent buffer) is more reliably recognised
-  // by iOS as a genuine audio event within the gesture call stack.
-  // DEBUG: you should hear a very subtle click/tone on the first screen tap;
-  //        if you do, the AudioContext is unlocked.
-  const now = audioCtx.currentTime
-  const o = audioCtx.createOscillator()
-  const g = audioCtx.createGain()
-  o.type = 'sine'
-  o.frequency.value = 440
-  g.gain.setValueAtTime(0.05, now)
-  g.gain.exponentialRampToValueAtTime(0.0001, now + 0.05)
-  o.connect(g)
-  g.connect(audioCtx.destination)
-  o.start(now)
-  o.stop(now + 0.05)
-
-  // Pre-warm noise buffers now, while we are inside a gesture call stack,
-  // so they are ready when the Playhead fires its first drum hit.
-  ensureNoiseCache(audioCtx)
+  const silent = audioCtx.createBuffer(1, 1, audioCtx.sampleRate)
+  const src = audioCtx.createBufferSource()
+  src.buffer = silent
+  src.connect(audioCtx.destination)
+  src.start(0)
 }
