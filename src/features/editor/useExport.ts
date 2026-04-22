@@ -1,6 +1,4 @@
 import { ref } from 'vue'
-import jsPDF from 'jspdf'
-import { svg2pdf } from 'svg2pdf.js'
 import { useTabStore } from '@/stores/useTabStore'
 
 
@@ -17,6 +15,11 @@ export function useExport(getSvgEl: () => SVGSVGElement | null) {
     isExportingPDF.value = true
     exportError.value = null
     try {
+      const [{ default: jsPDF }, { svg2pdf }] = await Promise.all([
+        import('jspdf'),
+        import('svg2pdf.js'),
+      ])
+
       const w = svgEl.width.baseVal.value
       const h = svgEl.height.baseVal.value
 
