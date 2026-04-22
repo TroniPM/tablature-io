@@ -1,1 +1,8 @@
 @import "tailwindcss";
+
+/* Tailwind v4 uses @property for --tw-border-style initial-value.
+   Some environments (older Safari, certain Chrome builds) may not initialize
+   it correctly. This guarantees border-style is always "solid" as fallback. */
+*, *::before, *::after {
+  --tw-border-style: solid;
+}
