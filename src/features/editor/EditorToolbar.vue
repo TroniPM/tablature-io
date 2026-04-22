@@ -187,22 +187,24 @@ function defaultSymbol(id: InstrumentId): NoteSymbol {
         <button
           :disabled="!store.canUndo"
           class="flex-1 py-1.5 rounded-lg text-xs transition-all duration-150
-                 border border-transparent disabled:opacity-30
+                 border border-transparent disabled:opacity-30 flex flex-col items-center gap-0.5
                  text-slate-400 hover:bg-slate-800 hover:text-slate-200 disabled:hover:bg-transparent"
           title="Undo (Ctrl+Z)"
           @click="store.undo()"
         >
-          ↩ Undo
+          <span>↩</span>
+          <span>Undo</span>
         </button>
         <button
           :disabled="!store.canRedo"
           class="flex-1 py-1.5 rounded-lg text-xs transition-all duration-150
-                 border border-transparent disabled:opacity-30
+                 border border-transparent disabled:opacity-30 flex flex-col items-center gap-0.5
                  text-slate-400 hover:bg-slate-800 hover:text-slate-200 disabled:hover:bg-transparent"
           title="Redo (Ctrl+Y)"
           @click="store.redo()"
         >
-          Redo ↪
+          <span>↪</span>
+          <span>Redo</span>
         </button>
       </div>
     </div>

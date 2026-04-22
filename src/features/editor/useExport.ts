@@ -2,7 +2,7 @@ import { ref } from 'vue'
 import jsPDF from 'jspdf'
 import { svg2pdf } from 'svg2pdf.js'
 import { useTabStore } from '@/stores/useTabStore'
-import type { TabDocument } from '@/types/tab'
+
 
 export function useExport(getSvgEl: () => SVGSVGElement | null) {
   const store = useTabStore()
@@ -98,19 +98,25 @@ export function useExport(getSvgEl: () => SVGSVGElement | null) {
 
   // ─── JSON export ───────────────────────────────────────────────────────────
   function exportJSON() {
-    const json = JSON.stringify(store.document, null, 2)
+    const payload = {
+      title: store.document.title,
+      bpm: store.document.bpm,
+      bars: store.document.bars,
+    }
+    const safeName = store.document.title.replace(/[<>:"/\\|?*]/g, '_') || 'tablatura'
+    const json = JSON.stringify(payload, null, 2)
     const blob = new Blob([json], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = `${store.document.title}.tablature.json`
+    a.download = `${safeName}.json`
     document.body.appendChild(a)
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
   }
 
-  // ─── JSON import ───────────────────────────────────────────────────────────
+  // ─── JSON import — creates a new project with a fresh UUID ────────────────
   function importJSON() {
     const input = document.createElement('input')
     input.type = 'file'
@@ -121,20 +127,15 @@ export function useExport(getSvgEl: () => SVGSVGElement | null) {
       const reader = new FileReader()
       reader.onload = (ev) => {
         try {
-          const parsed = JSON.parse(ev.target!.result as string) as TabDocument
-          // Basic structural validation
-          if (
-            typeof parsed.title !== 'string' ||
-            typeof parsed.bpm !== 'number' ||
-            !Array.isArray(parsed.bars)
-          ) {
-            exportError.value = 'Invalid file: not a tablature JSON.'
+          const parsed: unknown = JSON.parse(ev.target!.result as string)
+          const ok = store.importProjectFromJSON(parsed)
+          if (!ok) {
+            exportError.value = 'Arquivo inválido: não é uma tablatura JSON.'
             return
           }
           exportError.value = null
-          store.document = parsed
         } catch {
-          exportError.value = 'Failed to read file. Make sure it is a valid tablature JSON.'
+          exportError.value = 'Falha ao ler o arquivo. Certifique-se de que é um JSON válido.'
         }
       }
       reader.readAsText(file)

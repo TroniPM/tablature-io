@@ -46,6 +46,15 @@ export interface TabDocument {
   bars: TabBar[]
 }
 
+// ─── Project (multi-document management) ─────────────────────────────────────
+export interface Project {
+  id: string
+  name: string
+  bars: TabBar[]
+  bpm: number
+  lastModified: number
+}
+
 // ─── Grid layout constants ────────────────────────────────────────────────────
 export const GRID = {
   /** Pixels between two adjacent beat lines (quarter notes) */
